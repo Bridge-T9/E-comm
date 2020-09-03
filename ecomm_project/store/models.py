@@ -9,6 +9,8 @@ class Customer(models.Model):
     email = models.EmailField(max_length=200, null=True)
 
     def __str__(self):
+        if self.name == None:
+            return "Error: Customer name = none"
         return self.name
 
 
@@ -24,10 +26,19 @@ class Product(models.Model):
     price = models.FloatField()
     category = models.ForeignKey(Category, on_delete=DO_NOTHING)
     digital = models.BooleanField(default=False, null=True, blank=False)
-    image = models.ImageField(default='pictures/placeholder.png')
+    image = models.ImageField(null=True, blank=True)
 
     def __str__(self):
         return self.name
+"""
+    @property
+    def imageURL(self):
+        try:
+            url = self.image.url
+        except:
+            url = ''
+            return url
+"""
 
 
 class Order(models.Model):
@@ -37,7 +48,28 @@ class Order(models.Model):
     transaction_id = models.CharField(max_length=200, null=True)
 
     def __str__(self):
-        return str(self.id)
+        return str(self.id) if self.id else ''
+
+    @property
+    def shipping(self):
+        shipping = False
+        order_items = self.orderitem_set.all()
+        for i in order_items:
+            if i.product.digital == False:
+                shipping = True
+        return shipping
+
+    @property
+    def get_cart_total(self):
+        order_items = self.orderitem_set.all()
+        total = sum([item.get_total for item in order_items])
+        return total
+
+    @property
+    def get_cart_items(self):
+        order_items = self.orderitem_set.all()
+        total = sum([item.quantity for item in order_items])
+        return total
 
 
 # one order can have multiple order items
@@ -46,6 +78,11 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, blank=True, null=True)
     quantity = models.IntegerField(default=0, null=True, blank=True)
     date_added = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def get_total(self):
+        total = self.product.price * self.quantity
+        return total
 
 
 class ShippingAddress(models.Model):
