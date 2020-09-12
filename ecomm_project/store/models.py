@@ -23,14 +23,14 @@ class Category(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=200, null=True)
-    price = models.FloatField()
+    price = models.DecimalField(max_digits=7, decimal_places=2)
     category = models.ForeignKey(Category, on_delete=DO_NOTHING)
     digital = models.BooleanField(default=False, null=True, blank=False)
     image = models.ImageField(null=True, blank=True)
 
     def __str__(self):
         return self.name
-"""
+
     @property
     def imageURL(self):
         try:
@@ -38,7 +38,7 @@ class Product(models.Model):
         except:
             url = ''
             return url
-"""
+
 
 
 class Order(models.Model):
@@ -48,7 +48,10 @@ class Order(models.Model):
     transaction_id = models.CharField(max_length=200, null=True)
 
     def __str__(self):
-        return str(self.id) if self.id else ''
+        if self.id:
+            return f"{self.customer}: {str(self.id)}"
+        else:
+            ''
 
     @property
     def shipping(self):
@@ -79,6 +82,9 @@ class OrderItem(models.Model):
     quantity = models.IntegerField(default=0, null=True, blank=True)
     date_added = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return str(self.product)
+
     @property
     def get_total(self):
         total = self.product.price * self.quantity
@@ -95,4 +101,4 @@ class ShippingAddress(models.Model):
     date_added = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.address
+        return f" {self.customer}: {self.address}"
